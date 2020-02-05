@@ -1,0 +1,18 @@
+Link4PayService:
+    Db:
+        LogsConnString:
+            settings-key: Link4PayService-LogsConnString
+            types:
+              - AzureTableStorage
+SlackNotifications:
+    AzureQueue:
+        ConnectionString:
+            settings-key: SlackNotificationsConnString
+            types:
+                - AzureTableStorage
+        QueueName:
+            settings-key: SlackQueueName
+MonitoringServiceClient:
+    MonitoringServiceUrl:
+        settings-key: MonitoringServiceUrl
+
