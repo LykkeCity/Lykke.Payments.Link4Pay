@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM microsoft/dotnet:2.2-aspnetcore-runtime
 WORKDIR /app
 COPY . .
 ENTRYPOINT ["dotnet", "Lykke.Payments.Link4Pay.dll"]

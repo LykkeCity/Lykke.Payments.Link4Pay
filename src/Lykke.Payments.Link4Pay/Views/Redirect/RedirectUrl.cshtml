@@ -1,0 +1,23 @@
+@model Lykke.Payments.Link4Pay.Models.RedirectFormModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Redirect</title>
+</head>
+<body OnLoad="OnLoadEvent();">
+<form target="_top" name="form1" action="@Model.Url" method="post">
+    <input type="hidden" name="data" value='{"payLoad":"@Model.Payload","apiKey":"@Model.ClientId","lang":"en"}' id="data">
+</form>
+
+<script>
+    function OnLoadEvent() {
+        document.form1.submit();
+    }
+</script>
+</body>
+</html>

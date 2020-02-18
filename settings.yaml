@@ -2,8 +2,47 @@ Link4PayService:
     Db:
         LogsConnString:
             settings-key: Link4PayService-LogsConnString
-            types:
-              - AzureTableStorage
+            types: [AzureTableStorage]
+        ClientPersonalInfoConnString:
+            settings-key: PersonalInfoConnString
+            types: [AzureTableStorage]
+    KeyVault:
+        VaultBaseUrl:
+            settings-key: Link4PayService-KeyVault-VaultBaseUrl
+        ClientId:
+            settings-key: Link4PayService-KeyVault-ClientId
+        ClientSecret:
+            settings-key: Link4PayService-KeyVault-ClientSecret
+        CertificateName:
+            settings-key: Link4PayService-KeyVault-CertificateName
+        PasswordKey:
+            settings-key: Link4PayService-KeyVault-PasswordKey
+    Link4Pay:
+        ClientId:
+            settings-key: Link4PayService-Link4Pay-ClientId
+        AccessToken:
+            settings-key: Link4PayService-Link4Pay-AccessToken
+        PaymentUrl:
+            settings-key: Link4PayService-Link4Pay-PaymentUrl
+        ExternalUrl:
+            settings-key: Link4PayService-Link4Pay-ExternalUrl
+    Cqrs:
+        ConnectionString:
+            settings-key: RabbitSagas
+            types: [RabbitMq]
+    GrpcPort:
+        settings-key: Link4PayService-GrpcPort
+    BankCardFeeClientId:
+        settings-key: FeeSettings-TargetClientId-BankCard
+    SourceClientId:
+        settings-key: Payments-Transfer-SourceClientId
+    SupportedCountries:
+        settings-key: Link4PayService-SupportedCountries
+        types: [JsonArray]
+    SupportedCurrencies:
+        settings-key: Link4PayService-SupportedCurrencies
+        types: [JsonArray]
+
 SlackNotifications:
     AzureQueue:
         ConnectionString:
@@ -15,4 +54,17 @@ SlackNotifications:
 MonitoringServiceClient:
     MonitoringServiceUrl:
         settings-key: MonitoringServiceUrl
-
+ClientAccountServiceClient:
+    ServiceUrl:
+        settings-key: ClientAccountServiceUrl
+PersonalDataServiceClient:
+    ApiKey:
+        settings-key: PersonalDataApiKey
+    ServiceUri:
+        settings-key: PersonalDataServiceUrl
+FeeCalculatorServiceClient:
+    ServiceUrl:
+        settings-key: FeeCalculatorServiceUrl
+ExchangeOperationsServiceClient:
+    ServiceUrl:
+        settings-key: ExchangeOperationsServiceUrl

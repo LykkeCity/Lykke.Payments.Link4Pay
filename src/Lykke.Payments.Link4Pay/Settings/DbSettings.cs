@@ -6,5 +6,7 @@ namespace Lykke.Payments.Link4Pay.Settings
     {
         [AzureTableCheck]
         public string LogsConnString { get; set; }
+        [AzureTableCheck]
+        public string ClientPersonalInfoConnString { get; set; }
     }
 }
