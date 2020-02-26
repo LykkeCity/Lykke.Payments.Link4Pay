@@ -19,7 +19,6 @@ namespace Lykke.Payments.Link4Pay.Workflow
         private readonly DateTime _registrationDateSince;
         private readonly TimeSpan _paymentPeriod;
 
-        private readonly IPersonalDataService _personalDataService;
         private readonly ICreditCardsService _creditCardsService;
         private readonly IEmailSender _emailSender;
         private readonly string _antifraudNotificationEmail;
@@ -30,7 +29,6 @@ namespace Lykke.Payments.Link4Pay.Workflow
             IClientAccountClient clientAccountClient,
             DateTime registrationDateSince,
             TimeSpan paymentPeriod,
-            IPersonalDataService personalDataService,
             ICreditCardsService creditCardsService,
             IEmailSender emailSender,
             string antifraudNotificationEmail,
@@ -41,7 +39,6 @@ namespace Lykke.Payments.Link4Pay.Workflow
             _clientAccountClient = clientAccountClient;
             _registrationDateSince = registrationDateSince;
             _paymentPeriod = paymentPeriod;
-            _personalDataService = personalDataService;
             _creditCardsService = creditCardsService;
             _emailSender = emailSender;
             _antifraudNotificationEmail = antifraudNotificationEmail;
@@ -137,8 +134,9 @@ namespace Lykke.Payments.Link4Pay.Workflow
             var msgData = new PlainTextData
             {
                 Subject = "Review deposit request",
-                Text = $"New deposit request (transactionId = {transaction.TransactionId}, clientId = {clientAccount.Id}, externalId = {clientAccount.ExternalId}), please review"
+                Text = $"New deposit request (transactionId = {transaction.TransactionId}), please review"
             };
+
             await _emailSender.SendEmailAsync(clientAccount.PartnerId, _antifraudNotificationEmail, msgData);
         }
     }

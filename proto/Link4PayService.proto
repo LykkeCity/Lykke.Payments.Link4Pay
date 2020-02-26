@@ -1,10 +1,13 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 package Lykke.Payments.Link4Pay;
 
 service Link4PayService {
     rpc GetPaymentUrl (PaymentUrlRequest) returns (PaymentUrlResponse) {}
     rpc GetTransactionInfo (TransactionRequest) returns (TransactionInfoResponse) {}
+    rpc GetSupportedCurrencies (google.protobuf.Empty) returns (SupportedCurrenciesResponse) {}
 }
 
 message PaymentUrlRequest {
@@ -30,6 +33,10 @@ message TransactionRequest {
 message TransactionInfoResponse {
     string assetId = 1;
     double amount = 2;
+}
+
+message SupportedCurrenciesResponse {
+    repeated string currencies = 1;
 }
 
 message Transaction {

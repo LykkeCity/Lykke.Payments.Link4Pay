@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.Common.Log;
 using Lykke.Contracts.Payments;
@@ -213,6 +214,14 @@ namespace Lykke.Payments.Link4Pay.Services
                 AssetId = transaction?.AssetId ?? string.Empty,
                 Amount = transaction?.Amount ?? 0
             };
+        }
+
+        public override Task<SupportedCurrenciesResponse> GetSupportedCurrencies(Empty request, ServerCallContext context)
+        {
+            var result = new SupportedCurrenciesResponse();
+            result.Currencies.AddRange(_supportedCurrencies);
+
+            return Task.FromResult(result);
         }
     }
 }

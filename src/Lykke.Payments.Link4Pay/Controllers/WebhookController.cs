@@ -42,8 +42,6 @@ namespace Lykke.Payments.Link4Pay.Controllers
         [Route("/webhook")]
         public async Task<ActionResult> Webhook()
         {
-            _log.Info("Webhook");
-
             try
             {
                 WebhookEvent webhookEvent;
@@ -52,6 +50,12 @@ namespace Lykke.Payments.Link4Pay.Controllers
                     var body = await reader.ReadToEndAsync();
                     var data = _encryptionService.Decrypt(body);
                     webhookEvent = JsonConvert.DeserializeObject<WebhookEvent>(data);
+
+                    if (webhookEvent?.Status == TransactionStatus.Pending)
+                    {
+                        _log.Info("Skip webhook event with pending status");
+                        return Ok();
+                    }
                 }
 
                 if (webhookEvent != null)

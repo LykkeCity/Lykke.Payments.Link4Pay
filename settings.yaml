@@ -32,6 +32,8 @@ Link4PayService:
             types: [RabbitMq]
     GrpcPort:
         settings-key: Link4PayService-GrpcPort
+    AntiFraudNotificationEmail:
+        settings-key: Link4PayService-AntiFraudNotificationEmail
     BankCardFeeClientId:
         settings-key: FeeSettings-TargetClientId-BankCard
     SourceClientId:

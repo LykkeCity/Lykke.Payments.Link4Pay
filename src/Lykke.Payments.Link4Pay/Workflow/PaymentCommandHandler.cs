@@ -37,19 +37,14 @@ namespace Lykke.Payments.Link4Pay.Workflow
 
         public async Task<CommandHandlingResult> Handle(CashInCommand command, IEventPublisher eventPublisher)
         {
-            var transactionStatus = await _link4PayApiService.GetTransactionInfoAsync(command.TransactionId);
-
-            _log.Info("Transaction status", new {transactionId = transactionStatus.TxnReference, status = transactionStatus.Status.ToString()}.ToJson());
-
-            if (transactionStatus.Status == TransactionStatus.Pending)
-                return new CommandHandlingResult { Retry = true, RetryDelay = (long)TimeSpan.FromMinutes(1).TotalMilliseconds };
-
-            var tx = await _paymentTransactionsRepository.GetByTransactionIdAsync(transactionStatus.TxnReference);
+            var tx = await _paymentTransactionsRepository.GetByTransactionIdAsync(command.TransactionId);
 
             if (tx != null && (tx.Status == PaymentStatus.NotifyDeclined || tx.Status == PaymentStatus.NotifyProcessed || tx.Status == PaymentStatus.Processing))
             {
                 return CommandHandlingResult.Ok();
             }
+
+            var transactionStatus = await _link4PayApiService.GetTransactionInfoAsync(command.TransactionId);
 
             if (!string.IsNullOrEmpty(transactionStatus.Card?.CardHash))
             {
@@ -70,32 +65,36 @@ namespace Lykke.Payments.Link4Pay.Workflow
                 }
                 else
                 {
-                    _log.Warning("CreditCardUsedEvent is not sent!");
+                    _log.Warning("CreditCardUsedEvent is not sent!", context: new { tranasactionId = transactionStatus.TxnReference}.ToJson());
                 }
             }
 
-            if (transactionStatus.Status == TransactionStatus.Successful)
+            switch (transactionStatus.Status)
             {
-                tx = await _paymentTransactionsRepository.StartProcessingTransactionAsync(command.TransactionId);
+                case TransactionStatus.Successful:
+                    tx = await _paymentTransactionsRepository.StartProcessingTransactionAsync(command.TransactionId);
 
-                if (tx != null) // initial status
-                {
-                    eventPublisher.PublishEvent(new ProcessingStartedEvent
+                    if (tx != null) // initial status
                     {
-                        OrderId = command.TransactionId
-                    });
-                }
+                        eventPublisher.PublishEvent(new ProcessingStartedEvent
+                        {
+                            OrderId = command.TransactionId
+                        });
+                    }
 
-                return CommandHandlingResult.Ok();
+                    return CommandHandlingResult.Ok();
+
+                case TransactionStatus.Failed:
+                    await _paymentTransactionsRepository.SetStatusAsync(command.TransactionId, PaymentStatus.NotifyDeclined);
+
+                    await _paymentTransactionEventsLog.WriteAsync(
+                        PaymentTransactionLogEvent.Create(
+                            command.TransactionId, command.Request, "Declined by Payment status from payment system", nameof(CashInCommand)));
+
+                    return CommandHandlingResult.Ok();
+                default:
+                    return new CommandHandlingResult { Retry = true, RetryDelay = (long)TimeSpan.FromMinutes(1).TotalMilliseconds };
             }
-
-            await _paymentTransactionsRepository.SetStatusAsync(command.TransactionId, PaymentStatus.NotifyDeclined);
-
-            await _paymentTransactionEventsLog.WriteAsync(
-                PaymentTransactionLogEvent.Create(
-                    command.TransactionId, command.Request, "Declined by Payment status from payment system", nameof(CashInCommand)));
-
-            return CommandHandlingResult.Ok();
         }
 
         public async Task<CommandHandlingResult> Handle(CompleteTransferCommand cmd, IEventPublisher eventPublisher)
