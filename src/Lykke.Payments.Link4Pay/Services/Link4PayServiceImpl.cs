@@ -203,5 +203,16 @@ namespace Lykke.Payments.Link4Pay.Services
                 };
             }
         }
+
+        public override async Task<TransactionInfoResponse> GetTransactionInfo(TransactionRequest request, ServerCallContext context)
+        {
+            var transaction = await  _paymentTransactionsRepository.GetByTransactionIdAsync(request.TransactionId);
+
+            return new TransactionInfoResponse
+            {
+                AssetId = transaction?.AssetId ?? string.Empty,
+                Amount = transaction?.Amount ?? 0
+            };
+        }
     }
 }

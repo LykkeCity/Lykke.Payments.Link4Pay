@@ -4,12 +4,32 @@ package Lykke.Payments.Link4Pay;
 
 service Link4PayService {
     rpc GetPaymentUrl (PaymentUrlRequest) returns (PaymentUrlResponse) {}
+    rpc GetTransactionInfo (TransactionRequest) returns (TransactionInfoResponse) {}
 }
 
 message PaymentUrlRequest {
     Transaction transaction = 1;
     DetailsInfo details = 2;
     UrlsInfo urls = 3;
+}
+
+message PaymentUrlResponse {
+    string paymentUrl = 1;
+    string okUrl = 2;
+    string failUrl = 3;
+    string cancelUrl = 4;
+    string reloadRegexp = 5;
+    string urlsRegexp = 6;
+    ErrorDetails error = 7;
+}
+
+message TransactionRequest {
+    string transactionId = 1;
+}
+
+message TransactionInfoResponse {
+    string assetId = 1;
+    double amount = 2;
 }
 
 message Transaction {
@@ -32,16 +52,6 @@ message UrlsInfo {
     string okUrl = 1;
     string failUrl = 2;
     string cancelUrl = 3;
-}
-
-message PaymentUrlResponse {
-    string paymentUrl = 1;
-    string okUrl = 2;
-    string failUrl = 3;
-    string cancelUrl = 4;
-    string reloadRegexp = 5;
-    string urlsRegexp = 6;
-    ErrorDetails error = 7;
 }
 
 message ErrorDetails {
