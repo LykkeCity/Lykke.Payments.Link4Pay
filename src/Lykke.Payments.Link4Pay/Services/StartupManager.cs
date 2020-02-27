@@ -38,9 +38,6 @@ namespace Lykke.Payments.Link4Pay.Services
 
         public async Task StartAsync()
         {
-            _cqrsEngine.StartSubscribers();
-            _cqrsEngine.StartProcesses();
-
             _grpcServer.Start();
 
             Console.WriteLine($"Grpc server listening on: {_grpcServer.Ports.First().Host}:{_grpcServer.Ports.First().Port}");
@@ -50,6 +47,10 @@ namespace Lykke.Payments.Link4Pay.Services
                 _keyVaultSettings.PasswordKey);
 
             _log.Info("Certificate initialized");
+
+            _cqrsEngine.StartPublishers();
+            _cqrsEngine.StartSubscribers();
+            _cqrsEngine.StartProcesses();
         }
     }
 }

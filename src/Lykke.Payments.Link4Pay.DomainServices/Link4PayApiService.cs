@@ -68,6 +68,7 @@ namespace Lykke.Payments.Link4Pay.DomainServices
             HttpWebRequest httpWebRequest = (HttpWebRequest) WebRequest.Create(_link4PaySettings.PaymentUrl);
             httpWebRequest.PreAuthenticate = true;
             httpWebRequest.AllowAutoRedirect = false;
+            httpWebRequest.KeepAlive = false;
 
             foreach (var item in headers)
             {
@@ -87,7 +88,7 @@ namespace Lykke.Payments.Link4Pay.DomainServices
                     await requestStream.WriteAsync(Encoding.ASCII.GetBytes(data), 0, data.Length);
                 }
 
-                using (var response = (HttpWebResponse)await httpWebRequest.GetResponseAsync())
+                using (var response = (HttpWebResponse) await httpWebRequest.GetResponseAsync())
                 using (var responseStream = response.GetResponseStream())
                 {
                     if (responseStream != null)

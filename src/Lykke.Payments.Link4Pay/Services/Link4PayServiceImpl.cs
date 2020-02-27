@@ -120,7 +120,7 @@ namespace Lykke.Payments.Link4Pay.Services
                     },
                     Url = new UrlInfo
                     {
-                        SuccessUrl = $"{(string.IsNullOrEmpty(request.Urls?.OkUrl?.Trim()) ? _successUrl : request.Urls?.OkUrl)}?transactionId={request.Transaction.TransactionId}",
+                        SuccessUrl = $"{(string.IsNullOrEmpty(request.Urls?.OkUrl?.Trim()) ? _successUrl : request.Urls?.OkUrl)}?v=1",
                         FailUrl =  string.IsNullOrEmpty(request.Urls?.FailUrl?.Trim())
                             ? _failUrl
                             : request.Urls?.FailUrl,
@@ -181,7 +181,7 @@ namespace Lykke.Payments.Link4Pay.Services
                 return new PaymentUrlResponse
                 {
                     PaymentUrl = url,
-                    OkUrl = $"{(string.IsNullOrEmpty(request.Urls?.OkUrl?.Trim()) ? _successUrl : request.Urls?.OkUrl)}?transactionId={request.Transaction.TransactionId}",
+                    OkUrl = $"{(string.IsNullOrEmpty(request.Urls?.OkUrl?.Trim()) ? _successUrl : request.Urls?.OkUrl)}?v=1",
                     FailUrl =  string.IsNullOrEmpty(request.Urls?.FailUrl?.Trim())
                         ? _failUrl
                         : request.Urls?.FailUrl,

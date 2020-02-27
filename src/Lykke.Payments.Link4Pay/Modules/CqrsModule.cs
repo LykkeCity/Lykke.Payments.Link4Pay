@@ -100,7 +100,7 @@ namespace Lykke.Payments.Link4Pay.Modules
                             .To(Link4PayBoundedContext.Name).With("payment-saga-commands")
                             .PublishingCommands(typeof(CreateTransferCommand))
                             .To(meContext).With("payment-saga-commands"));
-                    engine.StartPublishers();
+
                     return engine;
                 })
                 .As<ICqrsEngine>()

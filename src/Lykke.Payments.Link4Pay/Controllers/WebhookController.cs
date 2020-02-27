@@ -42,6 +42,7 @@ namespace Lykke.Payments.Link4Pay.Controllers
         [Route("/webhook")]
         public async Task<ActionResult> Webhook()
         {
+            _log.Info("Webhook");
             try
             {
                 WebhookEvent webhookEvent;
@@ -60,12 +61,14 @@ namespace Lykke.Payments.Link4Pay.Controllers
 
                 if (webhookEvent != null)
                 {
-                    await _rawLogRepository.RegisterEventAsync(RawLogEvent.Create(nameof(Webhook), webhookEvent.ToJson()));
+                    string data = webhookEvent.ToJson();
+                    _log.Info("Webhook data", context: data);
+                    await _rawLogRepository.RegisterEventAsync(RawLogEvent.Create(nameof(Webhook), data));
 
                      _cqrsEngine.SendCommand(new CashInCommand
                          {
                              TransactionId = webhookEvent.TxnReference,
-                             Request = webhookEvent.ToJson()
+                             Request = data
                          },
                          Link4PayBoundedContext.Name, Link4PayBoundedContext.Name);
                 }
