@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Lykke.Payments.Link4Pay.Controllers
 {
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class CallbacksController : Controller
     {
         private readonly IRawLogRepository _rawLogRepository;
@@ -22,7 +22,6 @@ namespace Lykke.Payments.Link4Pay.Controllers
         }
 
         [HttpGet]
-        [HttpPost]
         [Route("/ok")]
         public async Task<ActionResult> OkPage()
         {
@@ -32,7 +31,6 @@ namespace Lykke.Payments.Link4Pay.Controllers
         }
 
         [HttpGet]
-        [HttpPost]
         [Route("/fail")]
         public async Task<ActionResult> FailPage()
         {
@@ -42,7 +40,6 @@ namespace Lykke.Payments.Link4Pay.Controllers
         }
 
         [HttpGet]
-        [HttpPost]
         [Route("/cancel")]
         public async Task<ActionResult> CancelPage()
         {

@@ -94,9 +94,9 @@ namespace Lykke.Payments.Link4Pay.AzureRepositories.PaymentTransactions
         public async Task<bool> HasProcessedTransactionsAsync(string clientId, DateTime till)
         {
             var partitionKey = IndexByClient.GeneratePartitionKey(clientId);
-            // todo: use GetTopRecordAsync instead
-            var transactions = await _tableStorage.GetDataAsync(partitionKey, x => x.Status == PaymentStatus.NotifyProcessed && x.Created < till
-                                                                                   && x.PaymentSystem == CashInPaymentSystem.Link4Pay);
+            var transactions = await _tableStorage.GetDataAsync(partitionKey,
+                x => x.Status == PaymentStatus.NotifyProcessed && x.Created < till &&
+                     x.PaymentSystem == CashInPaymentSystem.Link4Pay);
             return transactions.Any();
         }
 
