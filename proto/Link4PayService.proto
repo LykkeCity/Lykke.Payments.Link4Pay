@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package Lykke.Payments.Link4Pay;
+
+service Link4PayService {
+    rpc GetPaymentUrl (PaymentUrlRequest) returns (PaymentUrlResponse) {}
+    rpc GetTransactionInfo (TransactionRequest) returns (TransactionInfoResponse) {}
+    rpc GetSupportedCurrencies (google.protobuf.Empty) returns (SupportedCurrenciesResponse) {}
+}
+
+message PaymentUrlRequest {
+    Transaction transaction = 1;
+    DetailsInfo details = 2;
+    UrlsInfo urls = 3;
+}
+
+message PaymentUrlResponse {
+    string paymentUrl = 1;
+    string okUrl = 2;
+    string failUrl = 3;
+    string cancelUrl = 4;
+    string reloadRegexp = 5;
+    string urlsRegexp = 6;
+    ErrorDetails error = 7;
+}
+
+message TransactionRequest {
+    string transactionId = 1;
+}
+
+message TransactionInfoResponse {
+    string assetId = 1;
+    double amount = 2;
+}
+
+message SupportedCurrenciesResponse {
+    repeated string currencies = 1;
+}
+
+message Transaction {
+    string transactionId = 1;
+    double amount = 2;
+    string assetId = 3;
+    string clientId = 4;
+    string externalClientId = 5;
+}
+
+message DetailsInfo {
+    string firstName = 1;
+    string lastName = 2;
+    string phone = 3;
+    string email = 4;
+    string countryIso3 = 5;
+}
+
+message UrlsInfo {
+    string okUrl = 1;
+    string failUrl = 2;
+    string cancelUrl = 3;
+}
+
+message ErrorDetails {
+    string message = 1;
+    enum ErrorType {
+        Unknown = 0;
+        CurrencyNotSupported = 1;
+        CountryNotSupported = 2;
+    }
+    ErrorType errorType = 2;
+}
