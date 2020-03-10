@@ -45,11 +45,18 @@ namespace Lykke.Payments.Link4Pay.DomainServices
             return $"{_link4PaySettings.ExternalUrl}/redirect?payload={data}&url={url.ToBase64()}";
         }
 
-        public async Task CreateWebHookAsync(string url, List<string> events)
+        public Task<WebhookResponse> CreateWebHookAsync(string url, List<string> events)
         {
-            var data = await SendRequestAsync<object>(
+            return SendRequestAsync<WebhookResponse>(
                 new {webhook = new {events = events, url = url}, merchantID = _link4PaySettings.ClientId},
                 Link4PayApiType.CreateWebhook);
+        }
+
+        public Task<WebhookResponse[]> GetWebHookAsync(string webhookId)
+        {
+            return SendRequestAsync<WebhookResponse[]>(
+                new {webhook = new { webhookId }, merchantID = _link4PaySettings.ClientId},
+                Link4PayApiType.GetWebhook);
         }
 
         public Task<TransactionStatusResponse> GetTransactionInfoAsync(string transactionId)
