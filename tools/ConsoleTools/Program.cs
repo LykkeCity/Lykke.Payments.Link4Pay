@@ -10,6 +10,7 @@ using Lykke.Common.Log;
 using Lykke.Contracts.Payments;
 using Lykke.Logs;
 using Lykke.Payments.Link4Pay.AzureRepositories.PaymentTransactions;
+using Lykke.Payments.Link4Pay.Contract;
 using Lykke.Payments.Link4Pay.Domain.Services;
 using Lykke.Payments.Link4Pay.DomainServices;
 using Lykke.SettingsReader.ReloadingManager;
@@ -53,11 +54,22 @@ namespace ConsoleTools
                     .Where(x => x.PaymentSystem == CashInPaymentSystem.Link4Pay && x.Status == PaymentStatus.NotifyDeclined)
                     .ToList();
 
+                Console.WriteLine($"Processing {items.Count} transactions...");
+
                 foreach (var item in items)
                 {
                     var transactionStatus = link4PayService.GetTransactionInfoAsync(item.TransactionId).GetAwaiter().GetResult();
-                    sb.AppendLine(
-                        $"{item.ClientId},{item.TransactionId},{item.Status},{transactionStatus.OriginalTxnStatus}");
+                    if (transactionStatus.OriginalTxnStatus == TransactionStatus.Successful)
+                    {
+                        sb.AppendLine($"{item.ClientId},{item.TransactionId},{item.Status},{transactionStatus.OriginalTxnStatus}");
+                        // paymentsStorage.MergeAsync(item.PartitionKey, item.RowKey, entity =>
+                        // {
+                        //     entity.Status = PaymentStatus.Processing;
+                        //     entity.AntiFraudStatus = "Pending";
+                        //
+                        //     return entity;
+                        // }).GetAwaiter().GetResult();
+                    }
                 }
             });
 
