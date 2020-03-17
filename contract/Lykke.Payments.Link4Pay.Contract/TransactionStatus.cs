@@ -4,6 +4,7 @@ namespace Lykke.Payments.Link4Pay.Contract
     {
         Successful,
         Pending,
-        Failed
+        Failed,
+        Reversed
     }
 }
