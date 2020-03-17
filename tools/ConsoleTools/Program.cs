@@ -62,13 +62,13 @@ namespace ConsoleTools
                     if (transactionStatus.OriginalTxnStatus == TransactionStatus.Successful)
                     {
                         sb.AppendLine($"{item.ClientId},{item.TransactionId},{item.Status},{transactionStatus.OriginalTxnStatus}");
-                        // paymentsStorage.MergeAsync(item.PartitionKey, item.RowKey, entity =>
-                        // {
-                        //     entity.Status = PaymentStatus.Processing;
-                        //     entity.AntiFraudStatus = "Pending";
-                        //
-                        //     return entity;
-                        // }).GetAwaiter().GetResult();
+                        paymentsStorage.MergeAsync(item.PartitionKey, item.RowKey, entity =>
+                        {
+                            entity.Status = PaymentStatus.Processing;
+                            entity.AntiFraudStatus = "Pending";
+
+                            return entity;
+                        }).GetAwaiter().GetResult();
                     }
                 }
             });
