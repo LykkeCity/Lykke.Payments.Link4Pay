@@ -76,7 +76,7 @@ namespace Lykke.Payments.Link4Pay.Domain
         public string TxnAmount { get; set; }
         public int RespCode { get; set; }
         public CardDetails Card { get; set; }
-        public int Status { get; set; }
+        public string Status { get; set; }
         public int StatusCode { get; set; }
     }
 }

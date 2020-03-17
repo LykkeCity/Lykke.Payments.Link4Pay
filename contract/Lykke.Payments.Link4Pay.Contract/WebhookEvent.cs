@@ -26,7 +26,7 @@ namespace Lykke.Payments.Link4Pay.Contract
         public string FirstAttemptDate { get; set; }
         public string TxnAmount { get; set; }
         public int RespCode { get; set; }
-        public int Status { get; set; }
+        public string Status { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public StatusCode StatusCode { get; set; }
     }
