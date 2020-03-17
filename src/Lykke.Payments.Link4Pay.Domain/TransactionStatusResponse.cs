@@ -1,4 +1,5 @@
 using Common;
+using Lykke.Payments.Link4Pay.Contract;
 using Newtonsoft.Json;
 
 namespace Lykke.Payments.Link4Pay.Domain
@@ -67,7 +68,7 @@ namespace Lykke.Payments.Link4Pay.Domain
         public string ReconciliationStatus { get; set; }
         public string SettlementStatus { get; set; }
         public string Provider { get; set; }
-        public string OriginalTxnStatus { get; set; }
+        public TransactionStatus OriginalTxnStatus { get; set; }
         public int OriginalTxnStatusCode { get; set; }
         public string RespMsg { get; set; }
         public string SettlementAmount { get; set; }
@@ -75,14 +76,7 @@ namespace Lykke.Payments.Link4Pay.Domain
         public string TxnAmount { get; set; }
         public int RespCode { get; set; }
         public CardDetails Card { get; set; }
-        public TransactionStatus Status { get; set; }
+        public int Status { get; set; }
         public int StatusCode { get; set; }
-    }
-
-    public enum TransactionStatus
-    {
-        Successful,
-        Pending,
-        Failed
     }
 }

@@ -50,7 +50,7 @@ namespace Lykke.Payments.Link4Pay.Controllers
                     var data = _encryptionService.Decrypt(body);
                     webhookEvent = JsonConvert.DeserializeObject<WebhookEvent>(data);
 
-                    if (webhookEvent?.Status == TransactionStatus.Pending)
+                    if (webhookEvent?.OriginalTxnStatus == TransactionStatus.Pending)
                     {
                         _log.Info("Skip webhook event with pending status");
                         return Ok();
@@ -60,7 +60,7 @@ namespace Lykke.Payments.Link4Pay.Controllers
                 if (webhookEvent != null)
                 {
                     string data = webhookEvent.ToJson();
-                    _log.Info("Webhook data", context: data);
+                    _log.Info($"Webhook data {webhookEvent.TxnReference}", context: data);
                     await _rawLogRepository.RegisterEventAsync(RawLogEvent.Create(nameof(Webhook), data));
 
                      _cqrsEngine.SendCommand(new CashInCommand
