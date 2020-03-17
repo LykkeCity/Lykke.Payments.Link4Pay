@@ -1,4 +1,7 @@
-namespace Lykke.Payments.Link4Pay.Domain
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Lykke.Payments.Link4Pay.Contract
 {
     public class WebhookEvent
     {
@@ -14,14 +17,17 @@ namespace Lykke.Payments.Link4Pay.Domain
         public string Url { get; set; }
         public string TxnReference { get; set; }
         public string Provider { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
         public TransactionStatus OriginalTxnStatus { get; set; }
-        public int OriginalTxnStatusCode { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public StatusCode OriginalTxnStatusCode { get; set; }
         public string RespMsg { get; set; }
         public string CurrencyCode { get; set; }
         public string FirstAttemptDate { get; set; }
         public string TxnAmount { get; set; }
         public int RespCode { get; set; }
-        public TransactionStatus Status { get; set; }
-        public int StatusCode { get; set; }
+        public int Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public StatusCode StatusCode { get; set; }
     }
 }

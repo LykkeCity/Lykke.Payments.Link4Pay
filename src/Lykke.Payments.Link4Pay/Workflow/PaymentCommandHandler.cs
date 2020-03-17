@@ -5,8 +5,8 @@ using Common.Log;
 using Lykke.Common.Log;
 using Lykke.Contracts.Payments;
 using Lykke.Cqrs;
+using Lykke.Payments.Link4Pay.Contract;
 using Lykke.Payments.Link4Pay.Contract.Events;
-using Lykke.Payments.Link4Pay.Domain;
 using Lykke.Payments.Link4Pay.Domain.Repositories.EventsLog;
 using Lykke.Payments.Link4Pay.Domain.Repositories.PaymentTransactions;
 using Lykke.Payments.Link4Pay.Domain.Services;
@@ -46,7 +46,7 @@ namespace Lykke.Payments.Link4Pay.Workflow
 
             var transactionStatus = await _link4PayApiService.GetTransactionInfoAsync(command.TransactionId);
 
-            if (!string.IsNullOrEmpty(transactionStatus.Card?.CardHash))
+            if (!string.IsNullOrEmpty(transactionStatus.Card?.CardHash) && transactionStatus.OriginalTxnStatus == TransactionStatus.Successful)
             {
                 await _paymentTransactionsRepository.SaveCardHashAsync(command.TransactionId, transactionStatus.Card.CardHash);
 
@@ -69,7 +69,7 @@ namespace Lykke.Payments.Link4Pay.Workflow
                 }
             }
 
-            switch (transactionStatus.Status)
+            switch (transactionStatus.OriginalTxnStatus)
             {
                 case TransactionStatus.Successful:
                     tx = await _paymentTransactionsRepository.StartProcessingTransactionAsync(command.TransactionId);
