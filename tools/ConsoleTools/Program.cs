@@ -55,16 +55,15 @@ namespace ConsoleTools
 
             Console.WriteLine("Certificate initialized");
 
-            Console.WriteLine("Getting payment transactions...");
-            var sb = new StringBuilder();
-            sb.AppendLine("ClientId,TransactionId,Status,TransactionStatus");
-
             foreach (var transactionId in settings.Transactions)
             {
+                Console.WriteLine($"Processing transaction {transactionId}");
+
                 var payment = (await paymentsStorage.GetDataAsync("BCO", entity => entity.TransactionId == transactionId)).FirstOrDefault();
 
                 if (payment != null && payment.Status != PaymentStatus.NotifyProcessed)
                 {
+                    Console.WriteLine($"Transaction status = {payment.Status}. Set status to Processing and AntiFraudStatus to NotFraud");
                     await Task.WhenAll(
                         paymentsStorage.MergeAsync(payment.PartitionKey, payment.RowKey, entity =>
                         {
@@ -86,10 +85,15 @@ namespace ConsoleTools
                         })
                     );
 
+                    Console.WriteLine("Sending ProcessingStartedEvent");
                     cqrsEngine.PublishEvent(new ProcessingStartedEvent
                     {
                         OrderId = transactionId
                     }, Link4PayBoundedContext.Name);
+                }
+                else
+                {
+                    Console.WriteLine($"Transaction not found or status = {payment?.Status}. Skip processing");
                 }
             }
 
