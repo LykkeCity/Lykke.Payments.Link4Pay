@@ -1,14 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.Common.Log;
 using Lykke.Contracts.Payments;
+using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Middleware.Logging;
 using Lykke.Logs;
+using Lykke.Messaging;
+using Lykke.Messaging.Contract;
+using Lykke.Messaging.RabbitMq;
+using Lykke.Messaging.Serialization;
 using Lykke.Payments.Link4Pay.AzureRepositories.PaymentTransactions;
 using Lykke.Payments.Link4Pay.Contract;
 using Lykke.Payments.Link4Pay.Domain.Services;
@@ -16,6 +25,7 @@ using Lykke.Payments.Link4Pay.DomainServices;
 using Lykke.SettingsReader.ReloadingManager;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace ConsoleTools
@@ -37,6 +47,7 @@ namespace ConsoleTools
             var paymentsStorage = container.Resolve<INoSQLTableStorage<PaymentTransactionEntity>>();
             var link4PayService = container.Resolve<ILink4PayApiService>();
             var encryptionService = container.Resolve<IEncryptionService>();
+            var cqrsEngine = container.Resolve<ICqrsEngine>();
 
             Console.WriteLine("Initializing certificate...");
             await encryptionService.InitAsync(settings.KeyVault.VaultBaseUrl, settings.KeyVault.CertificateName,
@@ -48,38 +59,38 @@ namespace ConsoleTools
             var sb = new StringBuilder();
             sb.AppendLine("ClientId,TransactionId,Status,TransactionStatus");
 
-            await paymentsStorage.GetDataByChunksAsync("BCO", entities =>
+            foreach (var transactionId in settings.Transactions)
             {
-                var items = entities
-                    .Where(x => x.PaymentSystem == CashInPaymentSystem.Link4Pay && x.Status == PaymentStatus.NotifyDeclined)
-                    .ToList();
+                var payment = (await paymentsStorage.GetDataAsync("BCO", entity => entity.TransactionId == transactionId)).FirstOrDefault();
 
-                Console.WriteLine($"Processing {items.Count} transactions...");
-
-                foreach (var item in items)
+                if (payment != null && payment.Status != PaymentStatus.NotifyProcessed)
                 {
-                    var transactionStatus = link4PayService.GetTransactionInfoAsync(item.TransactionId).GetAwaiter().GetResult();
-                    if (transactionStatus.OriginalTxnStatus == TransactionStatus.Successful)
-                    {
-                        sb.AppendLine($"{item.ClientId},{item.TransactionId},{item.Status},{transactionStatus.OriginalTxnStatus}");
-                        paymentsStorage.MergeAsync(item.PartitionKey, item.RowKey, entity =>
+                    await Task.WhenAll(
+                        paymentsStorage.MergeAsync(payment.PartitionKey, payment.RowKey, entity =>
                         {
                             entity.Status = PaymentStatus.Processing;
-                            entity.AntiFraudStatus = "Pending";
+                            entity.AntiFraudStatus = "NotFraud";
+                            if (string.IsNullOrEmpty(entity.MeTransactionId))
+                                entity.MeTransactionId = Guid.NewGuid().ToString();
 
                             return entity;
-                        }).GetAwaiter().GetResult();
-                    }
+                        }),
+                        paymentsStorage.MergeAsync(payment.ClientId, payment.TransactionId, entity =>
+                        {
+                            entity.Status = PaymentStatus.Processing;
+                            entity.AntiFraudStatus = "NotFraud";
+                            if (string.IsNullOrEmpty(entity.MeTransactionId))
+                                entity.MeTransactionId = Guid.NewGuid().ToString();
+
+                            return entity;
+                        })
+                    );
+
+                    cqrsEngine.PublishEvent(new ProcessingStartedEvent
+                    {
+                        OrderId = transactionId
+                    }, Link4PayBoundedContext.Name);
                 }
-            });
-
-
-            var filename = $"payment-transactions-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv";
-            Console.WriteLine($"Saving results to {filename}...");
-
-            using (var sw = new StreamWriter(filename))
-            {
-                sw.Write(sb.ToString());
             }
 
             Console.WriteLine("Done!");
@@ -89,9 +100,11 @@ namespace ConsoleTools
         {
             var builder = new ContainerBuilder();
 
-            ILogFactory logFactory = EmptyLogFactory.Instance;
+            var services = new ServiceCollection();
+            services.AddConsoleLykkeLogging();
 
-            builder.RegisterInstance(logFactory);
+            builder.Populate(services);
+
             builder.RegisterInstance(settings);
             builder.RegisterInstance(settings.Link4Pay);
             builder.RegisterInstance(settings.KeyVault);
@@ -126,7 +139,52 @@ namespace ConsoleTools
                     ConstantReloadingManager.From(settings.ClientPersonalInfoConnString),
                     "PaymentTransactions", ctx.Resolve<ILogFactory>())
             ).As<INoSQLTableStorage<PaymentTransactionEntity>>().SingleInstance();
+
+            BuildCqrsEngine(builder, settings.CqrsConnString);
             return builder.Build();
+        }
+
+        private static void BuildCqrsEngine(ContainerBuilder builder, string cqrsConnString)
+        {
+             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory { Uri =cqrsConnString };
+
+            builder.Register(ctx => new MessagingEngine(ctx.Resolve<ILogFactory>(),
+                new TransportResolver(new Dictionary<string, TransportInfo>
+                {
+                    {
+                        "RabbitMq",
+                        new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName,
+                            rabbitMqSettings.Password, "None", "RabbitMq")
+                    }
+                }),
+                new RabbitMqTransportFactory(ctx.Resolve<ILogFactory>()))).As<IMessagingEngine>().SingleInstance();
+
+            builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
+
+            builder.Register(ctx =>
+                {
+                    var engine = new CqrsEngine(ctx.Resolve<ILogFactory>(),
+                        ctx.Resolve<IDependencyResolver>(),
+                        ctx.Resolve<IMessagingEngine>(),
+                        new DefaultEndpointProvider(),
+                        true,
+                        Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq",
+                            SerializationFormat.ProtoBuf, environment: "lykke")),
+
+                        Register.EventInterceptors(new DefaultEventLoggingInterceptor(ctx.Resolve<ILogFactory>())),
+
+                        Register.BoundedContext(Link4PayBoundedContext.Name)
+                            .FailedCommandRetryDelay((long) TimeSpan.FromMinutes(1).TotalMilliseconds)
+                            .PublishingEvents(typeof(ProcessingStartedEvent))
+                            .With($"{Link4PayBoundedContext.Name}-events"));
+
+                    engine.StartAll();
+
+                    return engine;
+                })
+                .As<ICqrsEngine>()
+                .AutoActivate()
+                .SingleInstance();
         }
     }
 }
