@@ -53,12 +53,7 @@ namespace Lykke.Payments.Link4Pay.Workflow
             if (!result.IsOk())
             {
                 await _paymentTransactionEventsLog.WriteAsync(PaymentTransactionLogEvent.Create(createTransferCommand.OrderId, "N/A", $"{result.Code}:{result.Message}", nameof(CreateTransferCommand)));
-
-                switch (result.Code)
-                {
-                    case 401: // LOW BALANCE
-                        return CommandHandlingResult.Ok();
-                }
+                return CommandHandlingResult.Ok();
             }
 
             eventPublisher.PublishEvent(new TransferCreatedEvent
