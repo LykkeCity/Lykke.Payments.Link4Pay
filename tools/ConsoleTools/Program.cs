@@ -61,7 +61,7 @@ namespace ConsoleTools
 
                 var payment = (await paymentsStorage.GetDataAsync("BCO", entity => entity.TransactionId == transactionId)).FirstOrDefault();
 
-                if (payment != null && payment.Status != PaymentStatus.NotifyProcessed)
+                if (payment != null)
                 {
                     Console.WriteLine($"Transaction status = {payment.Status}. Set status to Processing and AntiFraudStatus to NotFraud");
                     await Task.WhenAll(
