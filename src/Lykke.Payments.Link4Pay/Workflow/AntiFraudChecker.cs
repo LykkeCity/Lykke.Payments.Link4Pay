@@ -9,6 +9,7 @@ using Lykke.Payments.Link4Pay.Domain.Repositories.PaymentTransactions;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.PersonalData.Client.Models;
 using Lykke.Service.PersonalData.Contract;
+using Telegram.Bot;
 
 namespace Lykke.Payments.Link4Pay.Workflow
 {
@@ -22,6 +23,8 @@ namespace Lykke.Payments.Link4Pay.Workflow
         private readonly ICreditCardsService _creditCardsService;
         private readonly IEmailSender _emailSender;
         private readonly string _antifraudNotificationEmail;
+        private readonly string _chatId;
+        private readonly ITelegramBotClient _telegramBot;
         private readonly ILog _log;
 
         public AntiFraudChecker(
@@ -31,7 +34,9 @@ namespace Lykke.Payments.Link4Pay.Workflow
             TimeSpan paymentPeriod,
             ICreditCardsService creditCardsService,
             IEmailSender emailSender,
-            string antifraudNotificationEmail,
+            string notificationEmail,
+            string chatId,
+            ITelegramBotClient telegramBot,
             ILogFactory logFactory
             )
         {
@@ -41,7 +46,9 @@ namespace Lykke.Payments.Link4Pay.Workflow
             _paymentPeriod = paymentPeriod;
             _creditCardsService = creditCardsService;
             _emailSender = emailSender;
-            _antifraudNotificationEmail = antifraudNotificationEmail;
+            _antifraudNotificationEmail = notificationEmail;
+            _chatId = chatId;
+            _telegramBot = telegramBot;
             _log = logFactory.CreateLog(this);
         }
 
@@ -131,13 +138,18 @@ namespace Lykke.Payments.Link4Pay.Workflow
 
             var clientAccount = await _clientAccountClient.ClientAccountInformation.GetByIdAsync(transaction.ClientId);
 
+            string text = $"New deposit request (transactionId = {transaction.TransactionId}), please review";
+
             var msgData = new PlainTextData
             {
                 Subject = "Review deposit request",
-                Text = $"New deposit request (transactionId = {transaction.TransactionId}), please review"
+                Text = text
             };
 
-            await _emailSender.SendEmailAsync(clientAccount.PartnerId, _antifraudNotificationEmail, msgData);
+            await Task.WhenAll(
+                _emailSender.SendEmailAsync(clientAccount.PartnerId, _antifraudNotificationEmail, msgData),
+                _telegramBot.SendTextMessageAsync(_chatId, text)
+            );
         }
     }
 

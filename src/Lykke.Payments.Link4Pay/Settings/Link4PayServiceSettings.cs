@@ -24,5 +24,6 @@ namespace Lykke.Payments.Link4Pay.Settings
         public string SourceClientId { get; set; }
         public IReadOnlyList<string> SupportedCountries { get; set; } = Array.Empty<string>();
         public IReadOnlyList<string> SupportedCurrencies { get; set; } = Array.Empty<string>();
+        public TelegramSettings Telegram { get; set; }
     }
 }
