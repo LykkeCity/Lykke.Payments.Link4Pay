@@ -99,7 +99,7 @@ namespace Lykke.Payments.Link4Pay.Modules
                 .WithParameter(TypedParameter.From(_appSettings.CurrentValue.Link4PayService.AntiFraudCheckPaymentPeriod))
                 .WithParameter(TypedParameter.From(_appSettings.CurrentValue.Link4PayService.AntiFraudCheckRegistrationDateSince))
                 .WithParameter("notificationEmail",_appSettings.CurrentValue.Link4PayService.AntiFraudNotificationEmail)
-                .WithParameter("chatId", _appSettings.CurrentValue.Link4PayService.AntiFraudNotificationEmail);
+                .WithParameter("chatId", _appSettings.CurrentValue.Link4PayService.Telegram.ChatId);
 
             builder.RegisterType<PaymentOkEmailSender>()
                 .As<IPaymentNotifier>()
