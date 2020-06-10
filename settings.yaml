@@ -44,6 +44,13 @@ Link4PayService:
     SupportedCurrencies:
         settings-key: Link4PayService-SupportedCurrencies
         types: [JsonArray]
+    Telegram:
+        Token:
+            settings-key: Link4PayService-Telegram-Token
+            types: [Optional]
+        ChatId:
+            settings-key: Link4PayService-Telegram-ChatId
+            types: [Optional]
 
 SlackNotifications:
     AzureQueue:

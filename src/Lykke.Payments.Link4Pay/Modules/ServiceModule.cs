@@ -13,6 +13,8 @@ using Lykke.Sdk;
 using Lykke.SettingsReader;
 using Microsoft.Azure.KeyVault;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Moq;
+using Telegram.Bot;
 
 namespace Lykke.Payments.Link4Pay.Modules
 {
@@ -96,11 +98,20 @@ namespace Lykke.Payments.Link4Pay.Modules
             builder.RegisterType<AntiFraudChecker>()
                 .WithParameter(TypedParameter.From(_appSettings.CurrentValue.Link4PayService.AntiFraudCheckPaymentPeriod))
                 .WithParameter(TypedParameter.From(_appSettings.CurrentValue.Link4PayService.AntiFraudCheckRegistrationDateSince))
-                .WithParameter(TypedParameter.From(_appSettings.CurrentValue.Link4PayService.AntiFraudNotificationEmail));
+                .WithParameter("notificationEmail",_appSettings.CurrentValue.Link4PayService.AntiFraudNotificationEmail)
+                .WithParameter("chatId", _appSettings.CurrentValue.Link4PayService.AntiFraudNotificationEmail);
 
             builder.RegisterType<PaymentOkEmailSender>()
                 .As<IPaymentNotifier>()
                 .SingleInstance();
+
+            builder.RegisterInstance(_appSettings.CurrentValue.Link4PayService.Telegram);
+
+            builder.RegisterInstance(
+                string.IsNullOrEmpty(_appSettings.CurrentValue.Link4PayService.Telegram.Token)
+                ? new Mock<ITelegramBotClient>().Object
+                : new TelegramBotClient(_appSettings.CurrentValue.Link4PayService.Telegram.Token)
+            ).As<ITelegramBotClient>().SingleInstance();
         }
     }
 }
